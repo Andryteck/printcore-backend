@@ -30,6 +30,24 @@ export class User {
   @Column({ default: 'user' })
   role: string; // 'user' | 'admin'
 
+  @Column({ default: 'individual' })
+  userType: string; // 'individual' | 'legal'
+
+  @Column({ nullable: true })
+  unp: string; // УНП (Учетный номер плательщика) для юридических лиц
+
+  @Column({ nullable: true })
+  legalAddress: string; // Юридический адрес для юридических лиц
+
+  @Column({ nullable: true })
+  bankName: string; // Название банка
+
+  @Column({ nullable: true })
+  bankAccount: string; // Расчетный счет
+
+  @Column({ nullable: true })
+  bankCode: string; // БИК банка
+
   @Column({ default: true })
   isActive: boolean;
 

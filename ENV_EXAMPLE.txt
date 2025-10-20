@@ -1,0 +1,16 @@
+# Скопируйте это содержимое в файл .env в папке printcore-backend
+
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
+DATABASE_NAME=printcore
+
+JWT_SECRET=printcore_secret_key_2025_change_me_in_production
+JWT_EXPIRES_IN=7d
+
+PORT=3001
+NODE_ENV=development
+
+FRONTEND_URL=http://localhost:3000
+

@@ -144,3 +144,7 @@ Error: getaddrinfo ENOTFOUND localhost
 
 **Найдите Connection String и вставьте в .env файл!** 🎯
 
+
+
+
+

@@ -1,16 +1,20 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   HttpCode,
   HttpStatus,
   UseInterceptors,
   ClassSerializerInterceptor,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -41,6 +45,17 @@ export class AuthController {
       user: result.user,
       token: result.token,
     };
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Получить информацию о текущем пользователе' })
+  @ApiResponse({ status: 200, description: 'Информация о пользователе' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  async getCurrentUser(@Request() req) {
+    const user = await this.authService.validateUser(req.user.userId);
+    return user;
   }
 }
 

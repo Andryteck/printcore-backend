@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -24,15 +25,16 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить текущего пользователя' })
-  getMe(@Request() req) {
-    return req.user;
+  async getMe(@Request() req) {
+    // Получаем полные данные пользователя из БД, включая все поля
+    return this.usersService.findOne(req.user.id);
   }
 
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить профиль' })
-  updateMe(@Request() req, @Body() updateData: any) {
+  updateMe(@Request() req, @Body() updateData: UpdateUserDto) {
     return this.usersService.update(req.user.id, updateData);
   }
 

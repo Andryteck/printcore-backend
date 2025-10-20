@@ -20,7 +20,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<{ user: User; token: string }> {
-    const { email, password, name, phone } = registerDto;
+    const { email, password, name, phone, userType, unp } = registerDto;
 
     // Проверка существующего пользователя
     const existingUser = await this.usersRepository.findOne({
@@ -40,6 +40,8 @@ export class AuthService {
       password: hashedPassword,
       name,
       phone,
+      userType: userType || 'individual', // По умолчанию физическое лицо
+      unp: unp || undefined, // УНП для юридических лиц
     });
 
     await this.usersRepository.save(user);
