@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm run start:prod"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+# Persistent Storage для SQLite базы данных
+[[volumes]]
+name = "printcore-data"
+mountPath = "/app/data"
+

@@ -25,8 +25,11 @@ export class OrdersService {
     return this.ordersRepository.save(order);
   }
 
-  async findAll(): Promise<Order[]> {
+  async findAll(userId?: string): Promise<Order[]> {
+    const whereClause = userId ? { userId } : {};
+    
     return this.ordersRepository.find({
+      where: whereClause,
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });

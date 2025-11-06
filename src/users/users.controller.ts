@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   UseInterceptors,
@@ -20,6 +21,30 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Получить всех пользователей (для админа)' })
+  async findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 50;
+    
+    const users = await this.usersService.findAll();
+    
+    // Пагинация
+    const start = (pageNum - 1) * limitNum;
+    const end = start + limitNum;
+    const paginatedUsers = users.slice(start, end);
+    
+    return {
+      users: paginatedUsers,
+      total: users.length,
+      page: pageNum,
+      limit: limitNum,
+    };
+  }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)

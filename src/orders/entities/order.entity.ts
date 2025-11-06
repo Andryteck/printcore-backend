@@ -41,15 +41,14 @@ export class Order {
   @Column({ type: 'int' })
   quantity: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'real' }) // SQLite использует real вместо decimal
   price: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'real' }) // SQLite использует real вместо decimal
   total: number;
 
   @Column({
-    type: 'enum',
-    enum: OrderStatus,
+    type: 'varchar',
     default: OrderStatus.PENDING,
   })
   status: OrderStatus;

@@ -1,16 +1,19 @@
 # Скопируйте это содержимое в файл .env в папке printcore-backend
 
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=postgres
-DATABASE_PASSWORD=your_password
-DATABASE_NAME=printcore
+# SQLite база данных
+# Локальная разработка:
+DB_FILE=printcore.db
+# Production (Railway/Render с persistent volume):
+# DB_FILE=/app/data/printcore.db
 
+# JWT авторизация
 JWT_SECRET=printcore_secret_key_2025_change_me_in_production
 JWT_EXPIRES_IN=7d
 
+# Сервер
 PORT=3001
 NODE_ENV=development
 
+# Frontend URL для CORS
 FRONTEND_URL=http://localhost:3000
 

@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
@@ -17,19 +18,46 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('orders')
 @Controller('orders')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Создать заказ' })
   create(@Request() req, @Body() createOrderDto: CreateOrderDto) {
     return this.ordersService.create(req.user.id, createOrderDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Получить все заказы пользователя' })
+  @ApiOperation({ summary: 'Получить все заказы (для админа) или заказы пользователя' })
+  async findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('userId') userId?: string,
+  ) {
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 50;
+    
+    const orders = await this.ordersService.findAll(userId);
+    
+    // Пагинация
+    const start = (pageNum - 1) * limitNum;
+    const end = start + limitNum;
+    const paginatedOrders = orders.slice(start, end);
+    
+    return {
+      orders: paginatedOrders,
+      total: orders.length,
+      page: pageNum,
+      limit: limitNum,
+    };
+  }
+
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Получить заказы текущего пользователя' })
   findUserOrders(@Request() req) {
     return this.ordersService.findByUser(req.user.id);
   }
@@ -41,15 +69,18 @@ export class OrdersController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить заказ' })
   update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
     return this.ordersService.update(id, updateOrderDto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить заказ' })
   remove(@Param('id') id: string) {
     return this.ordersService.remove(id);
   }
 }
-
