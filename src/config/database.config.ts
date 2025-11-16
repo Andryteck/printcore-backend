@@ -9,8 +9,10 @@ export default registerAs(
       type: 'better-sqlite3',
       database: process.env.DB_FILE || 'printcore.db',
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV === 'development',
-      logging: process.env.NODE_ENV === 'development',
+      // В проде по умолчанию выключено. Можно принудительно включить через DB_SYNC=true
+      synchronize:
+        process.env.DB_SYNC === 'true' || process.env.NODE_ENV !== 'production',
+      logging: process.env.NODE_ENV !== 'production',
     } as TypeOrmModuleOptions;
   },
 );
