@@ -6,10 +6,39 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS
+  // CORS - разрешаем запросы с фронтенда
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const allowedOrigins = [
+    frontendUrl,
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://printcore.by',
+    'https://www.printcore.by',
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Разрешаем запросы без origin (например, Postman, мобильные приложения)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Разрешаем если origin в списке разрешенных
+      if (allowedOrigins.some(allowedOrigin => origin.startsWith(allowedOrigin))) {
+        return callback(null, true);
+      }
+      
+      // Разрешаем все в development режиме для удобства разработки
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      
+      // В production отклоняем неразрешенные origins
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   });
 
   // Global validation pipe
