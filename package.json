@@ -14,7 +14,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "nest build && node -e \"console.log('PWD=',process.cwd())\" && ls -la && echo '--- dist ---' && ls -la dist && node dist/main.js",
+    "start:prod": "nest build && node dist/src/main.js",
     "postinstall": "nest build",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
