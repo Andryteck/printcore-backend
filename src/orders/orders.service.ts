@@ -15,11 +15,16 @@ export class OrdersService {
   async create(userId: string, createOrderDto: CreateOrderDto): Promise<Order> {
     const orderNumber = this.generateOrderNumber();
     
+    // Если в options есть totalAmount, используем его, иначе вычисляем
+    const totalAmount = createOrderDto.options?.totalAmount;
+    const calculatedTotal = createOrderDto.price * createOrderDto.quantity;
+    const finalTotal = totalAmount !== undefined ? totalAmount : calculatedTotal;
+    
     const order = this.ordersRepository.create({
       ...createOrderDto,
       userId,
       orderNumber,
-      total: createOrderDto.price * createOrderDto.quantity,
+      total: finalTotal,
     });
 
     return this.ordersRepository.save(order);
