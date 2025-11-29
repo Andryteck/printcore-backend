@@ -52,12 +52,24 @@ export class AuthController {
       console.log('[AuthController] POST /auth/login - успешно:', {
         userId: result.user.id,
         email: result.user.email,
+        hasToken: !!result.token,
+        tokenLength: result.token?.length || 0,
+        tokenPreview: result.token ? `${result.token.substring(0, 20)}...` : 'none',
         timestamp: new Date().toISOString()
       });
-      return {
+      
+      const response = {
         user: result.user,
         token: result.token,
       };
+      
+      console.log('[AuthController] POST /auth/login - возвращаем ответ:', {
+        hasUser: !!response.user,
+        hasToken: !!response.token,
+        tokenType: typeof response.token
+      });
+      
+      return response;
     } catch (error) {
       console.error('[AuthController] POST /auth/login - ошибка:', {
         message: error.message,
