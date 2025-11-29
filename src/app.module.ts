@@ -9,6 +9,7 @@ import { ServicesModule } from './services/services.module';
 import { OrdersModule } from './orders/orders.module';
 import { AlbumsModule } from './albums/albums.module';
 import { MockupsModule } from './mockups/mockups.module';
+import { CartModule } from './cart/cart.module';
 import databaseConfig from './config/database.config';
 
 @Module({
@@ -34,6 +35,7 @@ import databaseConfig from './config/database.config';
     OrdersModule,
     AlbumsModule,
     MockupsModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],

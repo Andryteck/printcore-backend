@@ -1,10 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { json } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Увеличиваем лимит размера тела запроса для загрузки изображений в base64
+  // По умолчанию лимит 100KB, увеличиваем до 10MB для корзины с изображениями
+  app.use(json({ limit: '10mb' }));
 
   // CORS - разрешаем запросы с фронтенда
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
