@@ -17,22 +17,23 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest();
+    
     if (err || !user) {
-      const request = context.switchToHttp().getRequest();
       console.error('[JwtAuthGuard] Ошибка авторизации:', {
         error: err?.message,
         info: info?.message,
-        path: request.url,
-        method: request.method,
+        path: request?.url,
+        method: request?.method,
         hasUser: !!user
       });
       throw err || new UnauthorizedException('Требуется авторизация');
     }
     
     console.log('[JwtAuthGuard] Авторизация успешна:', {
-      userId: user.userId,
-      email: user.email,
-      path: request.url
+      userId: user?.userId || user?.id,
+      email: user?.email,
+      path: request?.url
     });
     
     return user;
