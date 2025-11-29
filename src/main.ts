@@ -7,22 +7,38 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Логирование всех входящих запросов ДО парсинга тела
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/cart')) {
+      console.log(`[Request BEFORE] ${req.method} ${req.path}`, {
+        headers: {
+          authorization: req.headers.authorization ? 'Bearer ***' : 'none',
+          'content-type': req.headers['content-type'],
+          'content-length': req.headers['content-length'],
+        },
+        url: req.url,
+        query: req.query
+      });
+    }
+    next();
+  });
+
   // Увеличиваем лимит размера тела запроса для загрузки изображений в base64
   // По умолчанию лимит 100KB, увеличиваем до 10MB для корзины с изображениями
   app.use(json({ limit: '10mb' }));
 
-  // Логирование всех входящих запросов
+  // Логирование всех входящих запросов ПОСЛЕ парсинга тела
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/cart')) {
       const bodyStr = req.body ? JSON.stringify(req.body) : '';
-      console.log(`[Request] ${req.method} ${req.path}`, {
+      console.log(`[Request AFTER] ${req.method} ${req.path}`, {
         headers: {
           authorization: req.headers.authorization ? 'Bearer ***' : 'none',
           'content-type': req.headers['content-type'],
         },
         bodySize: bodyStr.length,
         bodyPreview: bodyStr.substring(0, 500),
-        fullBody: req.method === 'POST' ? req.body : undefined // Полное тело только для POST
+        fullBody: req.method === 'POST' || req.method === 'PUT' ? req.body : undefined // Полное тело для POST/PUT
       });
     }
     next();
@@ -77,10 +93,19 @@ async function bootstrap() {
           property: err.property,
           constraints: err.constraints,
           value: err.value,
-          target: err.target
+          target: err.target ? Object.keys(err.target) : null
         }));
         console.error('[ValidationPipe] Ошибка валидации:', JSON.stringify(errorMessages, null, 2));
-        console.error('[ValidationPipe] Полные ошибки валидации:', errors);
+        console.error('[ValidationPipe] Полные ошибки валидации:', JSON.stringify(errors, null, 2));
+        console.error('[ValidationPipe] Количество ошибок:', errors.length);
+        errors.forEach((err, index) => {
+          console.error(`[ValidationPipe] Ошибка ${index + 1}:`, {
+            property: err.property,
+            constraints: err.constraints,
+            value: err.value,
+            children: err.children
+          });
+        });
         return new BadRequestException({
           message: 'Ошибка валидации данных',
           errors: errorMessages
