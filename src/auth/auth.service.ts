@@ -55,29 +55,56 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<{ user: User; token: string }> {
     const { email, password } = loginDto;
 
+    console.log('[AuthService] Login attempt:', {
+      email,
+      passwordLength: password?.length || 0,
+      hasPassword: !!password
+    });
+
     // Поиск пользователя
     const user = await this.usersRepository.findOne({
       where: { email },
     });
 
+    console.log('[AuthService] User found:', {
+      found: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      isActive: user?.isActive
+    });
+
     if (!user) {
+      console.error('[AuthService] User not found for email:', email);
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
     // Проверка пароля
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
+    console.log('[AuthService] Password validation:', {
+      isValid: isPasswordValid,
+      hasStoredPassword: !!user.password
+    });
+
     if (!isPasswordValid) {
+      console.error('[AuthService] Invalid password for user:', email);
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
     // Проверка активности
     if (!user.isActive) {
+      console.error('[AuthService] User account is inactive:', email);
       throw new UnauthorizedException('Аккаунт деактивирован');
     }
 
     // Генерация токена
     const token = this.generateToken(user);
+
+    console.log('[AuthService] Login successful:', {
+      userId: user.id,
+      email: user.email,
+      tokenGenerated: !!token
+    });
 
     return { user, token };
   }

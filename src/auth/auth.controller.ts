@@ -40,11 +40,30 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Успешная авторизация' })
   @ApiResponse({ status: 401, description: 'Неверные данные' })
   async login(@Body() loginDto: LoginDto) {
-    const result = await this.authService.login(loginDto);
-    return {
-      user: result.user,
-      token: result.token,
-    };
+    console.log('[AuthController] POST /auth/login - получен запрос:', {
+      email: loginDto.email,
+      hasPassword: !!loginDto.password,
+      passwordLength: loginDto.password?.length || 0
+    });
+
+    try {
+      const result = await this.authService.login(loginDto);
+      console.log('[AuthController] POST /auth/login - успешно:', {
+        userId: result.user.id,
+        email: result.user.email
+      });
+      return {
+        user: result.user,
+        token: result.token,
+      };
+    } catch (error) {
+      console.error('[AuthController] POST /auth/login - ошибка:', {
+        message: error.message,
+        status: error.status,
+        error: error
+      });
+      throw error;
+    }
   }
 
   @Get('me')
