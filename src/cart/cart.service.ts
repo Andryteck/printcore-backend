@@ -52,10 +52,23 @@ export class CartService {
   }
 
   async findAll(userId: string): Promise<Cart[]> {
-    return this.cartRepository.find({
-      where: { userId },
-      order: { created: 'DESC' },
+    console.log('[CartService] findAll - начало:', {
+      userId,
+      hasUserId: !!userId
     });
+    
+    try {
+      const carts = await this.cartRepository.find({
+        where: { userId },
+        order: { created: 'DESC' },
+      });
+      
+      console.log('[CartService] findAll - найдено заказов:', carts.length);
+      return carts;
+    } catch (error) {
+      console.error('[CartService] findAll - ошибка:', error);
+      throw error;
+    }
   }
 
   async findOne(userId: string, orderId: string): Promise<Cart> {

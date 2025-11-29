@@ -26,7 +26,26 @@ export class CartController {
   @Get()
   @ApiOperation({ summary: 'Получить все заказы из корзины пользователя' })
   findAll(@Request() req) {
-    return this.cartService.findAll(req.user.id);
+    console.log('[CartController] GET /cart - получен запрос:', {
+      userId: req.user?.id || req.user?.userId,
+      userEmail: req.user?.email,
+      hasUser: !!req.user
+    });
+    
+    try {
+      const userId = req.user?.id || req.user?.userId;
+      if (!userId) {
+        console.error('[CartController] GET /cart - userId не найден в req.user:', req.user);
+        throw new Error('User ID not found');
+      }
+      
+      const result = this.cartService.findAll(userId);
+      console.log('[CartController] GET /cart - успешно обработан');
+      return result;
+    } catch (error) {
+      console.error('[CartController] GET /cart - ошибка:', error);
+      throw error;
+    }
   }
 
   @Post()
