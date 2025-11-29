@@ -14,13 +14,15 @@ async function bootstrap() {
   // Логирование всех входящих запросов
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/cart')) {
+      const bodyStr = req.body ? JSON.stringify(req.body) : '';
       console.log(`[Request] ${req.method} ${req.path}`, {
         headers: {
           authorization: req.headers.authorization ? 'Bearer ***' : 'none',
           'content-type': req.headers['content-type'],
         },
-        bodySize: req.body ? JSON.stringify(req.body).length : 0,
-        bodyPreview: req.body ? JSON.stringify(req.body).substring(0, 200) : 'empty'
+        bodySize: bodyStr.length,
+        bodyPreview: bodyStr.substring(0, 500),
+        fullBody: req.method === 'POST' ? req.body : undefined // Полное тело только для POST
       });
     }
     next();
@@ -74,9 +76,11 @@ async function bootstrap() {
         const errorMessages = errors.map(err => ({
           property: err.property,
           constraints: err.constraints,
-          value: err.value
+          value: err.value,
+          target: err.target
         }));
         console.error('[ValidationPipe] Ошибка валидации:', JSON.stringify(errorMessages, null, 2));
+        console.error('[ValidationPipe] Полные ошибки валидации:', errors);
         return new BadRequestException({
           message: 'Ошибка валидации данных',
           errors: errorMessages
@@ -102,6 +106,21 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
+
+  // Глобальный обработчик ошибок для логирования
+  app.use((err: any, req: any, res: any, next: any) => {
+    if (req.path?.startsWith('/api/cart')) {
+      console.error('[Global Error Handler] Ошибка в cart endpoint:', {
+        method: req.method,
+        path: req.path,
+        error: err.message,
+        stack: err.stack,
+        status: err.status || 500,
+        response: err.response
+      });
+    }
+    next(err);
+  });
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
