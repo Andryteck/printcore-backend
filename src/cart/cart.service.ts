@@ -13,24 +13,42 @@ export class CartService {
   ) {}
 
   async create(userId: string, createCartDto: CreateCartDto): Promise<Cart> {
-    // Проверяем, существует ли уже заказ с таким orderId для этого пользователя
-    const existingCart = await this.cartRepository.findOne({
-      where: { userId, orderId: createCartDto.orderId },
-    });
-
-    if (existingCart) {
-      // Если заказ существует, обновляем его
-      Object.assign(existingCart, createCartDto);
-      return this.cartRepository.save(existingCart);
-    }
-
-    // Создаем новый заказ
-    const cart = this.cartRepository.create({
-      ...createCartDto,
+    console.log('[CartService] create - начало:', {
       userId,
+      orderId: createCartDto.orderId,
+      orderName: createCartDto.orderName,
+      dto: createCartDto
     });
 
-    return this.cartRepository.save(cart);
+    try {
+      // Проверяем, существует ли уже заказ с таким orderId для этого пользователя
+      const existingCart = await this.cartRepository.findOne({
+        where: { userId, orderId: createCartDto.orderId },
+      });
+
+      if (existingCart) {
+        console.log('[CartService] create - найден существующий заказ, обновляем');
+        // Если заказ существует, обновляем его
+        Object.assign(existingCart, createCartDto);
+        const saved = await this.cartRepository.save(existingCart);
+        console.log('[CartService] create - заказ обновлен:', saved.id);
+        return saved;
+      }
+
+      console.log('[CartService] create - создаем новый заказ');
+      // Создаем новый заказ
+      const cart = this.cartRepository.create({
+        ...createCartDto,
+        userId,
+      });
+
+      const saved = await this.cartRepository.save(cart);
+      console.log('[CartService] create - заказ создан:', saved.id);
+      return saved;
+    } catch (error) {
+      console.error('[CartService] create - ошибка при сохранении:', error);
+      throw error;
+    }
   }
 
   async findAll(userId: string): Promise<Cart[]> {

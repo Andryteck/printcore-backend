@@ -32,7 +32,27 @@ export class CartController {
   @Post()
   @ApiOperation({ summary: 'Сохранить заказ в корзину' })
   create(@Request() req, @Body() createCartDto: CreateCartDto) {
-    return this.cartService.create(req.user.id, createCartDto);
+    console.log('[CartController] POST /cart - получен запрос:', {
+      userId: req.user?.id,
+      orderId: createCartDto?.orderId,
+      orderName: createCartDto?.orderName,
+      orderType: createCartDto?.orderType,
+      itemsCount: createCartDto?.items?.length || 0,
+      hasStatus: !!createCartDto?.status,
+      hasOptions: !!createCartDto?.options,
+      hasEditLink: !!createCartDto?.editLink,
+      hasCreatedAt: !!createCartDto?.createdAt,
+      fullDto: createCartDto
+    });
+    
+    try {
+      const result = this.cartService.create(req.user.id, createCartDto);
+      console.log('[CartController] POST /cart - успешно обработан');
+      return result;
+    } catch (error) {
+      console.error('[CartController] POST /cart - ошибка:', error);
+      throw error;
+    }
   }
 
   @Put(':orderId')

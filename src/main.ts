@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json } from 'express';
 import { AppModule } from './app.module';
@@ -10,6 +10,21 @@ async function bootstrap() {
   // Увеличиваем лимит размера тела запроса для загрузки изображений в base64
   // По умолчанию лимит 100KB, увеличиваем до 10MB для корзины с изображениями
   app.use(json({ limit: '10mb' }));
+
+  // Логирование всех входящих запросов
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/cart')) {
+      console.log(`[Request] ${req.method} ${req.path}`, {
+        headers: {
+          authorization: req.headers.authorization ? 'Bearer ***' : 'none',
+          'content-type': req.headers['content-type'],
+        },
+        bodySize: req.body ? JSON.stringify(req.body).length : 0,
+        bodyPreview: req.body ? JSON.stringify(req.body).substring(0, 200) : 'empty'
+      });
+    }
+    next();
+  });
 
   // CORS - разрешаем запросы с фронтенда
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -52,6 +67,21 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+      exceptionFactory: (errors) => {
+        const errorMessages = errors.map(err => ({
+          property: err.property,
+          constraints: err.constraints,
+          value: err.value
+        }));
+        console.error('[ValidationPipe] Ошибка валидации:', JSON.stringify(errorMessages, null, 2));
+        return new BadRequestException({
+          message: 'Ошибка валидации данных',
+          errors: errorMessages
+        });
+      },
     }),
   );
 
