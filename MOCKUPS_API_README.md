@@ -590,3 +590,23 @@ CMD ["npm", "run", "start:prod"]
 API доступен на: `http://localhost:3001/api`
 Swagger docs: `http://localhost:3001/api`
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

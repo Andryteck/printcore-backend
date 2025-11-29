@@ -12,3 +12,23 @@ import { Mockup } from './entities/mockup.entity';
 })
 export class MockupsModule {}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -33,11 +33,26 @@ export class OrdersService {
   async findAll(userId?: string): Promise<Order[]> {
     const whereClause = userId ? { userId } : {};
     
-    return this.ordersRepository.find({
+    console.log('[OrdersService] Finding orders with whereClause:', whereClause);
+    
+    const orders = await this.ordersRepository.find({
       where: whereClause,
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });
+    
+    console.log(`[OrdersService] Found ${orders.length} orders`);
+    if (orders.length > 0) {
+      console.log('[OrdersService] Sample order:', {
+        id: orders[0].id,
+        orderNumber: orders[0].orderNumber,
+        userId: orders[0].userId,
+        total: orders[0].total,
+        status: orders[0].status,
+      });
+    }
+    
+    return orders;
   }
 
   async findByUser(userId: string): Promise<Order[]> {
