@@ -23,11 +23,17 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @UseInterceptors(ClassSerializerInterceptor) // Используем только для register, чтобы исключить password из user
   @ApiOperation({ summary: 'Регистрация нового пользователя' })
   @ApiResponse({ status: 201, description: 'Пользователь успешно зарегистрирован' })
   @ApiResponse({ status: 409, description: 'Пользователь уже существует' })
   async register(@Body() registerDto: RegisterDto) {
     const result = await this.authService.register(registerDto);
+    console.log('[AuthController] POST /auth/register - возвращаем ответ:', {
+      hasUser: !!result.user,
+      hasToken: !!result.token,
+      tokenType: typeof result.token
+    });
     return {
       user: result.user,
       token: result.token,
