@@ -75,6 +75,8 @@ export class AuthService {
 
     if (!user) {
       console.error('[AuthService] User not found for email:', email);
+      console.error('[AuthService] Проверьте, что пользователь существует в базе данных');
+      console.error('[AuthService] Возможно, база данных была очищена. Нужно зарегистрировать пользователя заново.');
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
@@ -88,6 +90,7 @@ export class AuthService {
 
     if (!isPasswordValid) {
       console.error('[AuthService] Invalid password for user:', email);
+      console.error('[AuthService] Пароль не совпадает. Проверьте правильность введенного пароля.');
       throw new UnauthorizedException('Неверный email или пароль');
     }
 

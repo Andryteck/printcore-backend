@@ -43,14 +43,16 @@ export class AuthController {
     console.log('[AuthController] POST /auth/login - получен запрос:', {
       email: loginDto.email,
       hasPassword: !!loginDto.password,
-      passwordLength: loginDto.password?.length || 0
+      passwordLength: loginDto.password?.length || 0,
+      timestamp: new Date().toISOString()
     });
 
     try {
       const result = await this.authService.login(loginDto);
       console.log('[AuthController] POST /auth/login - успешно:', {
         userId: result.user.id,
-        email: result.user.email
+        email: result.user.email,
+        timestamp: new Date().toISOString()
       });
       return {
         user: result.user,
@@ -60,8 +62,19 @@ export class AuthController {
       console.error('[AuthController] POST /auth/login - ошибка:', {
         message: error.message,
         status: error.status,
-        error: error
+        stack: error.stack,
+        timestamp: new Date().toISOString()
       });
+      
+      // Возвращаем более детальную ошибку для отладки
+      if (error.status === 401) {
+        return {
+          error: 'Неверный email или пароль',
+          message: error.message,
+          statusCode: 401
+        };
+      }
+      
       throw error;
     }
   }
