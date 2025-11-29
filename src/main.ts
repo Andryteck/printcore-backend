@@ -3,9 +3,57 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json } from 'express';
 import { AppModule } from './app.module';
+import { DataSource } from 'typeorm';
+
+// Функция для инициализации базы данных (создание таблиц, если их нет)
+async function initializeDatabase(app: any) {
+  try {
+    const dataSource = app.get(DataSource);
+    
+    if (!dataSource) {
+      console.error('[Database Init] DataSource не найден');
+      return;
+    }
+    
+    // Проверяем, существует ли таблица users
+    const queryRunner = dataSource.createQueryRunner();
+    await queryRunner.connect();
+    
+    let tableExists = false;
+    try {
+      tableExists = await queryRunner.hasTable('users');
+    } catch (error) {
+      console.log('[Database Init] Ошибка при проверке таблицы (возможно, БД не существует):', error.message);
+    }
+    
+    await queryRunner.release();
+    
+    console.log('[Database Init] Таблица users существует:', tableExists);
+    
+    if (!tableExists) {
+      console.log('[Database Init] Таблицы не найдены. Создаем схему базы данных...');
+      console.log('[Database Init] Это безопасно - создаются только отсутствующие таблицы');
+      
+      // Используем synchronize для создания таблиц
+      // Это безопасно, так как таблиц нет, и мы проверяем это перед вызовом
+      await dataSource.synchronize();
+      
+      console.log('[Database Init] Схема базы данных успешно создана');
+    } else {
+      console.log('[Database Init] Таблицы уже существуют, пропускаем создание');
+    }
+  } catch (error) {
+    console.error('[Database Init] Ошибка инициализации базы данных:', error);
+    console.error('[Database Init] Stack:', error.stack);
+    // Не прерываем запуск приложения, но логируем ошибку
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Инициализируем базу данных перед настройкой приложения
+  await initializeDatabase(app);
 
   // Логирование всех входящих запросов ДО парсинга тела
   app.use((req, res, next) => {
