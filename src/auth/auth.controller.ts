@@ -18,7 +18,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('auth')
 @Controller('auth')
-@UseInterceptors(ClassSerializerInterceptor)
+// Убираем ClassSerializerInterceptor для login/register, чтобы токен не исключался
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
