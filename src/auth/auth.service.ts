@@ -113,15 +113,51 @@ export class AuthService {
   }
 
   async validateUser(userId: string): Promise<User> {
-    const user = await this.usersRepository.findOne({
-      where: { id: userId, isActive: true },
+    console.log('[AuthService] validateUser - начало:', {
+      userId,
+      hasUserId: !!userId
     });
+    
+    try {
+      const user = await this.usersRepository.findOne({
+        where: { id: userId, isActive: true },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Пользователь не найден');
+      console.log('[AuthService] validateUser - результат:', {
+        found: !!user,
+        userId: user?.id,
+        email: user?.email,
+        isActive: user?.isActive
+      });
+
+      if (!user) {
+        console.error('[AuthService] validateUser - пользователь не найден:', {
+          userId,
+          searchedWithIsActive: true
+        });
+        
+        // Попробуем найти без проверки isActive для диагностики
+        const userWithoutActiveCheck = await this.usersRepository.findOne({
+          where: { id: userId },
+        });
+        
+        if (userWithoutActiveCheck) {
+          console.warn('[AuthService] validateUser - пользователь найден, но неактивен:', {
+            userId,
+            isActive: userWithoutActiveCheck.isActive
+          });
+        } else {
+          console.error('[AuthService] validateUser - пользователь не существует в БД:', userId);
+        }
+        
+        throw new UnauthorizedException('Пользователь не найден');
+      }
+
+      return user;
+    } catch (error) {
+      console.error('[AuthService] validateUser - ошибка:', error);
+      throw error;
     }
-
-    return user;
   }
 
   private generateToken(user: User): string {
