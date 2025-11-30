@@ -55,109 +55,43 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<{ user: User; token: string }> {
     const { email, password } = loginDto;
 
-    console.log('[AuthService] Login attempt:', {
-      email,
-      passwordLength: password?.length || 0,
-      hasPassword: !!password
-    });
-
     // Поиск пользователя
     const user = await this.usersRepository.findOne({
       where: { email },
     });
 
-    console.log('[AuthService] User found:', {
-      found: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      isActive: user?.isActive
-    });
-
     if (!user) {
-      console.error('[AuthService] User not found for email:', email);
-      console.error('[AuthService] Проверьте, что пользователь существует в базе данных');
-      console.error('[AuthService] Возможно, база данных была очищена. Нужно зарегистрировать пользователя заново.');
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
     // Проверка пароля
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    console.log('[AuthService] Password validation:', {
-      isValid: isPasswordValid,
-      hasStoredPassword: !!user.password
-    });
-
     if (!isPasswordValid) {
-      console.error('[AuthService] Invalid password for user:', email);
-      console.error('[AuthService] Пароль не совпадает. Проверьте правильность введенного пароля.');
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
     // Проверка активности
     if (!user.isActive) {
-      console.error('[AuthService] User account is inactive:', email);
       throw new UnauthorizedException('Аккаунт деактивирован');
     }
 
     // Генерация токена
     const token = this.generateToken(user);
 
-    console.log('[AuthService] Login successful:', {
-      userId: user.id,
-      email: user.email,
-      tokenGenerated: !!token
-    });
-
     return { user, token };
   }
 
   async validateUser(userId: string): Promise<User> {
-    console.log('[AuthService] validateUser - начало:', {
-      userId,
-      hasUserId: !!userId
+    const user = await this.usersRepository.findOne({
+      where: { id: userId, isActive: true },
     });
-    
-    try {
-      const user = await this.usersRepository.findOne({
-        where: { id: userId, isActive: true },
-      });
 
-      console.log('[AuthService] validateUser - результат:', {
-        found: !!user,
-        userId: user?.id,
-        email: user?.email,
-        isActive: user?.isActive
-      });
-
-      if (!user) {
-        console.error('[AuthService] validateUser - пользователь не найден:', {
-          userId,
-          searchedWithIsActive: true
-        });
-        
-        // Попробуем найти без проверки isActive для диагностики
-        const userWithoutActiveCheck = await this.usersRepository.findOne({
-          where: { id: userId },
-        });
-        
-        if (userWithoutActiveCheck) {
-          console.warn('[AuthService] validateUser - пользователь найден, но неактивен:', {
-            userId,
-            isActive: userWithoutActiveCheck.isActive
-          });
-        } else {
-          console.error('[AuthService] validateUser - пользователь не существует в БД:', userId);
-        }
-        
-        throw new UnauthorizedException('Пользователь не найден');
-      }
-
-      return user;
-    } catch (error) {
-      console.error('[AuthService] validateUser - ошибка:', error);
-      throw error;
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
     }
+
+    return user;
   }
 
   private generateToken(user: User): string {

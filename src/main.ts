@@ -1,96 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { json } from 'express';
 import { AppModule } from './app.module';
-import { DataSource } from 'typeorm';
-
-// Функция для инициализации базы данных (создание таблиц, если их нет)
-async function initializeDatabase(app: any) {
-  try {
-    const dataSource = app.get(DataSource);
-    
-    if (!dataSource) {
-      console.error('[Database Init] DataSource не найден');
-      return;
-    }
-    
-    // Проверяем, существует ли таблица users
-    const queryRunner = dataSource.createQueryRunner();
-    await queryRunner.connect();
-    
-    let tableExists = false;
-    try {
-      tableExists = await queryRunner.hasTable('users');
-    } catch (error) {
-      console.log('[Database Init] Ошибка при проверке таблицы (возможно, БД не существует):', error.message);
-    }
-    
-    await queryRunner.release();
-    
-    console.log('[Database Init] Таблица users существует:', tableExists);
-    
-    if (!tableExists) {
-      console.log('[Database Init] Таблицы не найдены. Создаем схему базы данных...');
-      console.log('[Database Init] Это безопасно - создаются только отсутствующие таблицы');
-      
-      // Используем synchronize для создания таблиц
-      // Это безопасно, так как таблиц нет, и мы проверяем это перед вызовом
-      await dataSource.synchronize();
-      
-      console.log('[Database Init] Схема базы данных успешно создана');
-    } else {
-      console.log('[Database Init] Таблицы уже существуют, пропускаем создание');
-    }
-  } catch (error) {
-    console.error('[Database Init] Ошибка инициализации базы данных:', error);
-    console.error('[Database Init] Stack:', error.stack);
-    // Не прерываем запуск приложения, но логируем ошибку
-  }
-}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
-  // Инициализируем базу данных перед настройкой приложения
-  await initializeDatabase(app);
-
-  // Логирование всех входящих запросов ДО парсинга тела
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api/cart')) {
-      console.log(`[Request BEFORE] ${req.method} ${req.path}`, {
-        headers: {
-          authorization: req.headers.authorization ? 'Bearer ***' : 'none',
-          'content-type': req.headers['content-type'],
-          'content-length': req.headers['content-length'],
-        },
-        url: req.url,
-        query: req.query
-      });
-    }
-    next();
-  });
-
-  // Увеличиваем лимит размера тела запроса для загрузки изображений в base64
-  // По умолчанию лимит 100KB, увеличиваем до 10MB для корзины с изображениями
-  app.use(json({ limit: '10mb' }));
-
-  // Логирование всех входящих запросов ПОСЛЕ парсинга тела
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api/cart')) {
-      const bodyStr = req.body ? JSON.stringify(req.body) : '';
-      console.log(`[Request AFTER] ${req.method} ${req.path}`, {
-        headers: {
-          authorization: req.headers.authorization ? 'Bearer ***' : 'none',
-          'content-type': req.headers['content-type'],
-        },
-        bodySize: bodyStr.length,
-        bodyPreview: bodyStr.substring(0, 500),
-        fullBody: req.method === 'POST' || req.method === 'PUT' ? req.body : undefined // Полное тело для POST/PUT
-      });
-    }
-    next();
-  });
 
   // CORS - разрешаем запросы с фронтенда
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -133,32 +47,6 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-      exceptionFactory: (errors) => {
-        const errorMessages = errors.map(err => ({
-          property: err.property,
-          constraints: err.constraints,
-          value: err.value,
-          target: err.target ? Object.keys(err.target) : null
-        }));
-        console.error('[ValidationPipe] Ошибка валидации:', JSON.stringify(errorMessages, null, 2));
-        console.error('[ValidationPipe] Полные ошибки валидации:', JSON.stringify(errors, null, 2));
-        console.error('[ValidationPipe] Количество ошибок:', errors.length);
-        errors.forEach((err, index) => {
-          console.error(`[ValidationPipe] Ошибка ${index + 1}:`, {
-            property: err.property,
-            constraints: err.constraints,
-            value: err.value,
-            children: err.children
-          });
-        });
-        return new BadRequestException({
-          message: 'Ошибка валидации данных',
-          errors: errorMessages
-        });
-      },
     }),
   );
 
@@ -179,21 +67,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
-
-  // Глобальный обработчик ошибок для логирования
-  app.use((err: any, req: any, res: any, next: any) => {
-    if (req.path?.startsWith('/api/cart')) {
-      console.error('[Global Error Handler] Ошибка в cart endpoint:', {
-        method: req.method,
-        path: req.path,
-        error: err.message,
-        stack: err.stack,
-        status: err.status || 500,
-        response: err.response
-      });
-    }
-    next(err);
-  });
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
