@@ -55,7 +55,7 @@ export class CartController {
 
   @Post()
   @ApiOperation({ summary: 'Сохранить заказ в корзину' })
-  create(@Request() req, @Body() createCartDto: CreateCartDto) {
+  async create(@Request() req, @Body() createCartDto: CreateCartDto) {
     console.log('[CartController] POST /cart - получен запрос:', {
       userId: req.user?.id,
       orderId: createCartDto?.orderId,
