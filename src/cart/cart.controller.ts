@@ -70,8 +70,12 @@ export class CartController {
     });
     
     try {
-      const result = this.cartService.create(req.user.id, createCartDto);
-      console.log('[CartController] POST /cart - успешно обработан');
+      const result = await this.cartService.create(req.user.id, createCartDto);
+      console.log('[CartController] POST /cart - успешно обработан:', {
+        orderId: result.orderId,
+        orderName: result.orderName,
+        id: result.id
+      });
       return result;
     } catch (error) {
       console.error('[CartController] POST /cart - ошибка:', error);
