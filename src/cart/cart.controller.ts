@@ -25,7 +25,7 @@ export class CartController {
 
   @Get()
   @ApiOperation({ summary: 'Получить все заказы из корзины пользователя' })
-  findAll(@Request() req) {
+  async findAll(@Request() req) {
     console.log('[CartController] GET /cart - получен запрос:', {
       userId: req.user?.id || req.user?.userId,
       userEmail: req.user?.email,
