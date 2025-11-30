@@ -39,8 +39,13 @@ export class CartController {
         throw new Error('User ID not found');
       }
       
-      const result = this.cartService.findAll(userId);
-      console.log('[CartController] GET /cart - успешно обработан');
+      const result = await this.cartService.findAll(userId);
+      console.log('[CartController] GET /cart - успешно обработан:', {
+        resultLength: Array.isArray(result) ? result.length : 'not array',
+        resultType: typeof result,
+        isArray: Array.isArray(result),
+        result: Array.isArray(result) ? result : JSON.stringify(result).substring(0, 200)
+      });
       return result;
     } catch (error) {
       console.error('[CartController] GET /cart - ошибка:', error);
