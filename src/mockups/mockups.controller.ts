@@ -189,5 +189,18 @@ export class MockupsController {
       message: 'Макет успешно удален',
     };
   }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Обновить макет (например, привязать к заказу)' })
+  @ApiResponse({ status: 200, description: 'Макет успешно обновлен' })
+  @ApiResponse({ status: 404, description: 'Макет не найден' })
+  async update(@Param('id') id: string, @Body() updateData: { orderId?: string }) {
+    const mockup = await this.mockupsService.update(id, updateData);
+    return {
+      success: true,
+      mockup,
+      message: 'Макет успешно обновлен',
+    };
+  }
 }
 

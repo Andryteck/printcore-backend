@@ -195,6 +195,16 @@ export class MockupsService {
   }
 
   // Удаление макета
+  // Обновление макета (например, привязка к заказу)
+  async update(id: string, updateData: Partial<Mockup>): Promise<Mockup> {
+    const mockup = await this.findOne(id);
+
+    // Обновляем поля
+    Object.assign(mockup, updateData);
+
+    return await this.mockupsRepository.save(mockup);
+  }
+
   async remove(id: string): Promise<void> {
     const mockup = await this.findOne(id);
 
