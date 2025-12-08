@@ -3,34 +3,62 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 async function initDatabase() {
-  const dbFile = process.env.DB_FILE || 'printcore.db';
-  const dbDir = path.dirname(dbFile);
+  const databaseUrl = process.env.DATABASE_URL;
   
   console.log('\n🔄 Инициализация базы данных...');
-  console.log(`📁 Файл базы данных: ${dbFile}`);
-  console.log(`📂 Директория: ${dbDir}`);
   
-  // Создаём директорию если не существует
-  if (!fs.existsSync(dbDir)) {
-    console.log(`📁 Создаю директорию: ${dbDir}`);
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-
-  // Проверяем существование базы данных
-  const dbExists = fs.existsSync(dbFile);
-  if (dbExists) {
-    console.log('ℹ️  База данных уже существует');
+  let dataSource: DataSource;
+  
+  if (databaseUrl) {
+    // PostgreSQL для Railway/Production
+    console.log('📊 Используется PostgreSQL');
+    
+    const url = new URL(databaseUrl);
+    
+    dataSource = new DataSource({
+      type: 'postgres',
+      host: url.hostname,
+      port: parseInt(url.port) || 5432,
+      username: url.username,
+      password: url.password,
+      database: url.pathname.slice(1),
+      entities: [path.join(__dirname, '../**/*.entity.{ts,js}')],
+      synchronize: true,
+      logging: process.env.NODE_ENV !== 'production',
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    });
   } else {
-    console.log('🆕 Создаю новую базу данных');
-  }
+    // SQLite для локальной разработки
+    console.log('📊 Используется SQLite');
+    
+    const dbFile = process.env.DB_FILE || 'printcore.db';
+    const dbDir = path.dirname(dbFile);
+    
+    console.log(`📁 Файл базы данных: ${dbFile}`);
+    console.log(`📂 Директория: ${dbDir}`);
+    
+    // Создаём директорию если не существует
+    if (!fs.existsSync(dbDir)) {
+      console.log(`📁 Создаю директорию: ${dbDir}`);
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
 
-  const dataSource = new DataSource({
-    type: 'better-sqlite3',
-    database: dbFile,
-    entities: [path.join(__dirname, '../**/*.entity.{ts,js}')],
-    synchronize: true, // Принудительно создаем/обновляем таблицы
-    logging: process.env.NODE_ENV !== 'production',
-  });
+    // Проверяем существование базы данных
+    const dbExists = fs.existsSync(dbFile);
+    if (dbExists) {
+      console.log('ℹ️  База данных уже существует');
+    } else {
+      console.log('🆕 Создаю новую базу данных');
+    }
+
+    dataSource = new DataSource({
+      type: 'better-sqlite3',
+      database: dbFile,
+      entities: [path.join(__dirname, '../**/*.entity.{ts,js}')],
+      synchronize: true,
+      logging: process.env.NODE_ENV !== 'production',
+    });
+  }
 
   try {
     console.log('🔌 Подключение к базе данных...');

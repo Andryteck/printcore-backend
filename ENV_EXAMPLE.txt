@@ -1,10 +1,12 @@
 # Скопируйте это содержимое в файл .env в папке printcore-backend
 
-# SQLite база данных
-# Локальная разработка:
+# База данных
+# Для Railway PostgreSQL (рекомендуется для production):
+# DATABASE_URL создается автоматически Railway при добавлении PostgreSQL сервиса
+# Не нужно устанавливать вручную - Railway делает это автоматически
+
+# Для локальной разработки (SQLite):
 DB_FILE=printcore.db
-# Production (Railway/Render с persistent volume):
-# DB_FILE=/app/data/printcore.db
 
 # JWT авторизация
 JWT_SECRET=printcore_secret_key_2025_change_me_in_production

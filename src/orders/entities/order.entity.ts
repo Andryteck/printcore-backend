@@ -14,6 +14,7 @@ export enum OrderStatus {
   PROCESSING = 'processing',
   READY = 'ready',
   COMPLETED = 'completed',
+  ISSUED = 'issued', // Выдан
   CANCELLED = 'cancelled',
 }
 
