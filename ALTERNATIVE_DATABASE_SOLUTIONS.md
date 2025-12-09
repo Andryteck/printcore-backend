@@ -200,3 +200,5 @@ Connection refused / Authentication failed
 
 **Готово! Теперь база данных будет работать независимо от доступности Railway PostgreSQL! ✅**
 
+
+
